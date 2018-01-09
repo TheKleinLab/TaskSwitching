@@ -7,19 +7,19 @@ import klibs
 from klibs.KLConstants import *
 from klibs import P
 from klibs import KLUtilities as util
-from klibs.KLUserInterface import any_key
+from klibs.KLUserInterface import any_key, ui_request
 from klibs.KLGraphics import KLDraw as kld
 from klibs.KLGraphics import fill, flip, blit, clear
 from klibs.KLCommunication import message
 from klibs.KLKeyMap import KeyMap
+from klibs.KLTime import CountDown
 from klibs.KLEventInterface import TrialEventTicket as ET
 
 
 # Import other required packages
 
 import sdl2
-from sdl2.sdlmixer import (Mix_QuickLoad_WAV, Mix_QuickLoad_RAW, Mix_LoadWAV, Mix_PlayChannel,
-    Mix_Playing, Mix_VolumeChunk)
+from sdl2.sdlmixer import Mix_QuickLoad_RAW, Mix_PlayChannel, Mix_Playing, Mix_VolumeChunk
 import random
 import numpy as _np
 import ctypes
@@ -78,18 +78,16 @@ class TaskSwitching(klibs.Experiment):
         
         # Response Mapping
         
-        keymap_name         = "responses"
-        keymap_ui_labels    = ['z','/']
-        keymap_data_labels  = ['L','R']
-        keymap_sdl2_keysyms = [sdl2.SDLK_z, sdl2.SDLK_SLASH]
-        
-        self.keymap = KeyMap(keymap_name, keymap_ui_labels, keymap_data_labels, keymap_sdl2_keysyms)
+        self.keymap = KeyMap(
+            "responses", # Name
+            ['z', '/'], # UI labels
+            ['L', 'R'], # Data labels
+            [sdl2.SDLK_z, sdl2.SDLK_SLASH] # SDL2 Keysyms
+        )
         
         # Event Sequence
         
-        self.green_first = bool(random.choice(range(0,2,1))) # If True, green cue is first.
-        
-        #self.background_noise = self.generate_noise(12, dichotic=False)
+        self.green_first = random.choice([True, False]) # If True, green cue is first.
         
 
     def block(self):
@@ -112,18 +110,15 @@ class TaskSwitching(klibs.Experiment):
         
         # Configure ResponseCollector to get 'z' and '/' keypresses as responses
         
-        self.rc.display_callback = self.wait_for_response
-        self.rc.terminate_after = [10, TK_S] # 1000ms timeout for responses, not working currently
         self.rc.uses([RC_KEYPRESS])
-        self.rc.keypress_listener.interrupts = True
+        self.rc.terminate_after = [1000, TK_MS] # 1000ms timeout for responses
+        self.rc.flip = False
         self.rc.keypress_listener.key_map = self.keymap
-        self.rc.flip = False # Disable flipping on each rc loop, since callback already flips
+        self.rc.keypress_listener.interrupts = True
 
     def trial_prep(self):
         
         # Define variables for trial
-        
-        self.first_rc_flip = True # True if first flip of rc display callback had not occurred yet
         
         # Choose random target onset from range defined in params (2000-6000ms default)
         
@@ -151,8 +146,9 @@ class TaskSwitching(klibs.Experiment):
         
         # Add timecourse of events to EventManager
         
+        signal_duration = 50 if self.soa != 0 else 0 # no signal on 0 soa trials
         events = [[self.target_onset - self.soa, 'signal_on']]
-        events.append([events[-1][0] + 50, 'signal_off'])
+        events.append([events[-1][0] + signal_duration, 'signal_off'])
         events.append([self.target_onset, 'target_on'])
         for e in events:
             self.evm.register_ticket(ET(e[1], e[0]))
@@ -160,51 +156,46 @@ class TaskSwitching(klibs.Experiment):
         # Generate noise for trial and set volume to 50%
         
         self.background_noise = self.generate_noise(12, dichotic=False)
-        #self.background_noise = Mix_LoadWAV("test.wav")
         Mix_PlayChannel(1, self.background_noise, -1)
         Mix_VolumeChunk(self.background_noise, 64)
         
 
     def trial(self):
         
-        #if P.development_mode:
-        print(self.soa, self.target_onset, self.target_loc, self.cuetype)
+        if P.development_mode:
+            print(self.soa, self.target_onset, self.target_loc, self.cuetype)
         
         # Present stiumuli in seqence with timing as defined in trial_prep
         
+        signal_on = False
         self.display_refresh(target=None)
-        start = time.time()
         
-        while self.evm.before('signal_on', True):
-            continue
+        while self.evm.before('target_on'):
             
-        if self.evm.before('target_on', True) and self.evm.before('signal_off', True):
-            # This is never run if the SOA is 0.
-            Mix_VolumeChunk(self.background_noise, 128) # double volume of noise
-            
-        while self.evm.before('target_on', True) and self.evm.before('signal_off', True):
-            continue
-            
-        Mix_VolumeChunk(self.background_noise, 64) # return volume to 50% after 50ms
+            ui_request()
+            if self.evm.between('signal_on', 'signal_off') and not signal_on:
+                Mix_VolumeChunk(self.background_noise, 128) # double volume of noise
+                signal_on = True
+            elif self.evm.after('signal_off') and signal_on:
+                Mix_VolumeChunk(self.background_noise, 64) # return volume to 50% after 50ms
+                signal_on = False
         
-        while self.evm.before('target_on', True):
-            continue
+        Mix_VolumeChunk(self.background_noise, 64) # make sure volume's back down, just in case
         
         # Display target and wait for keyboard response (or 1000ms timeout interval)
-
+        
+        self.display_refresh(target=self.target_loc)
         self.rc.collect()
-        t = time.time() # get time immediately after a response is made
 
         # Prepare trial data for entering into database
         
-        response = self.rc.keypress_listener.response(True, False) # get key pressed
+        response = self.rc.keypress_listener.response(rt=False) # get key pressed
         if response != "NO_RESPONSE":
             if self.cuetype == "incompatible":
                 self.accuracy = int(response != self.target_loc)
             elif self.cuetype == "compatible":
                 self.accuracy = int(response == self.target_loc)
-            #rc_end = self.rc.keypress_listener.response(False, True)
-            self.rt = (t - self.rc_start)*1000 # Time between first flip of target and keypress
+            self.rt = self.rc.keypress_listener.response(value=False) # get reaction time
         else:
             response      = "timeout"
             self.accuracy = "NA"
@@ -213,12 +204,14 @@ class TaskSwitching(klibs.Experiment):
         # Display feedback for 1000ms following response. If response was accurate, display RT 
         # in place of fixation. If inaccurate, display red fixation to indicate error.
         
-        while (time.time() - t) < 1 and self.accuracy != "NA":
-            self.display_refresh(target=None, feedback=True)
+        if self.accuracy != "NA":
+            feedback_period = CountDown(1)
+            while feedback_period.counting():
+                self.display_refresh(target=None, feedback=True)
             
-        #if P.development_mode:
-        print(response, self.accuracy, self.rt)
-        print ""
+        if P.development_mode:
+            print(response, self.accuracy, self.rt)
+            print ""
 
         return {
             "block_num":  P.block_number,
@@ -236,6 +229,7 @@ class TaskSwitching(klibs.Experiment):
 
     def clean_up(self):
         pass
+        
         
     def display_refresh(self, cue=True, target=None, feedback=False):
         
@@ -265,16 +259,7 @@ class TaskSwitching(klibs.Experiment):
             blit(self.filled_marker, 5, self.flanker_pos_r)
             
         flip()
-        
-        
-    def wait_for_response(self):
-        # Display target in target location
-        self.display_refresh(target=self.target_loc)
-        # If first loop of response collection, the time after the first refresh is the true onset
-        # of the response period.
-        if self.first_rc_flip:
-            self.rc_start = time.time()
-            self.first_rc_flip = False
+
         
     def random_interval(self, lower, upper, refresh=60): 
         
@@ -287,6 +272,7 @@ class TaskSwitching(klibs.Experiment):
         max_flips = int(round(upper/time_per_flip))
         
         return random.choice(range(min_flips, max_flips, 1)) * time_per_flip
+        
         
     def generate_noise(self, duration, sample_rate=22050, multiplier=1, dichotic=False):
         # Code borrowed from Mike Lawrence, I don't fully understand how it works yet.
@@ -302,11 +288,8 @@ class TaskSwitching(klibs.Experiment):
             noise   = _np.random.randint(-max_int*multiplier, max_int*multiplier, size).astype('int16')
             noise_arr = _np.c_[noise,noise]
 
-        # Take randomly generated noise and convert it to a WAV, then convert that to SDL Mix_Chunk
+        # Take randomly generated noise and convert that to an SDL Mix_Chunk
         noise_arr.dtype = dtype
-        #sound_file = cStringIO.StringIO()
-        #wavio.write(sound_file, noise_arr, rate=(sample_rate*2))
-        #wav_string = sound_file.getvalue()
         wav_string = noise_arr.tostring()
         buflen = len(wav_string)
         buf = (ctypes.c_ubyte * buflen).from_buffer_copy(wav_string)
