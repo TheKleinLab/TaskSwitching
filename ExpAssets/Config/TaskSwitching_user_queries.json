@@ -8,7 +8,7 @@
         {
             "title": "name",
             "database_field": "userhash",
-            "query": "Please enter your unique alphanumeric ID:",
+            "query": "Please enter your B00 number:",
             "accepted": null,
             "allow_null": false,
             "format": {
@@ -32,7 +32,7 @@
                 },
                 "password": false,
                 "range": null,
-                "case_sensitive": true,
+                "case_sensitive": false,
                 "accept_as_true": null,
                 "action": null
             },
@@ -42,7 +42,7 @@
         {
             "title": "sex",
             "database_field": "sex",
-            "query": "What is your sex? \nAnswer with:  (m)ale,(f)emale,(o)ther",
+            "query": "What is your sex?\nAnswer with (m)ale, (f)emale, or (o)ther",
             "accepted": ["m", "f", "o"],
             "allow_null": false,
             "format": {
@@ -76,7 +76,7 @@
         {
             "title": "handedness",
             "database_field": "handedness",
-            "query": "Are right-handed, left-handed or ambidextrous? \nAnswer with (r)ight, (l)eft or (a)mbidextrous.",
+            "query": "Are right-handed, left-handed or ambidextrous?\nAnswer with (r)ight, (l)eft or (a)mbidextrous.",
             "accepted": ["r", "l", "a"],
             "allow_null": false,
             "format": {
@@ -138,7 +138,109 @@
                 "accept_as_true": null,
                 "action": null
             },
-            "anonymous_value": 1,
+            "anonymous_value": -1,
+            "active": true
+        },
+        {
+            "title": "athletics",
+            "database_field": "athletics",
+            "query": "What is the highest level of sport you currently participate in?\nAnswer with (c)ompetitive, (i)ntramural, or (n)ot currently participating.",
+            "accepted": ["c", "i", "n"],
+            "allow_null": false,
+            "format": {
+                "type": "str",
+                "styles": {
+                    "query": "default",
+                    "input": "default",
+                    "error": "alert"
+                },
+                "positions": {
+                    "locations": {
+                        "query": "auto",
+                        "input": "auto",
+                        "error": "auto"
+                    },
+                    "registrations": {
+                        "query": "auto",
+                        "input": "auto",
+                        "error": "auto"
+                    }
+                },
+                "password": false,
+                "range": null,
+                "case_sensitive": false,
+                "accept_as_true": null,
+                "action": null
+            },
+            "anonymous_value": "n",
+            "active": true
+        },
+        {
+            "title": "caffeine_drinker",
+            "database_field": "caffeine_drinker",
+            "query": "Do you typically consume one or more caffeinated drinks (energy drink, coffee, etc.) per day? (y/n)",
+            "accepted": ["y", "n"],
+            "allow_null": false,
+            "format": {
+                "type": "str",
+                "styles": {
+                    "query": "default",
+                    "input": "default",
+                    "error": "alert"
+                },
+                "positions": {
+                    "locations": {
+                        "query": "auto",
+                        "input": "auto",
+                        "error": "auto"
+                    },
+                    "registrations": {
+                        "query": "auto",
+                        "input": "auto",
+                        "error": "auto"
+                    }
+                },
+                "password": false,
+                "range": null,
+                "case_sensitive": false,
+                "accept_as_true": null,
+                "action": null
+            },
+            "anonymous_value": "n",
+            "active": true
+        },
+        {
+            "title": "caffeine_today",
+            "database_field": "caffeine_today",
+            "query": "Have you consumed a caffeinated drink today (y/n)?",
+            "accepted": ["y", "n"],
+            "allow_null": false,
+            "format": {
+                "type": "str",
+                "styles": {
+                    "query": "default",
+                    "input": "default",
+                    "error": "alert"
+                },
+                "positions": {
+                    "locations": {
+                        "query": "auto",
+                        "input": "auto",
+                        "error": "auto"
+                    },
+                    "registrations": {
+                        "query": "auto",
+                        "input": "auto",
+                        "error": "auto"
+                    }
+                },
+                "password": false,
+                "range": null,
+                "case_sensitive": false,
+                "accept_as_true": null,
+                "action": null
+            },
+            "anonymous_value": "n",
             "active": true
         }
     ],

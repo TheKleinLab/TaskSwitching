@@ -3,11 +3,11 @@
 #########################################
 # Runtime Settings
 #########################################
-collect_demographics = False
+collect_demographics = True
 manual_demographics_collection = False
 manual_trial_generation = False
 run_practice_blocks = True
-multi_user = False
+multi_user = True
 view_distance = 57 # in centimeters, 1cm = 1 deg of visual angle at 57cm away
 
 #########################################
@@ -62,3 +62,6 @@ target_onset_range = [2000, 6000]
 # interval between warning signal and target onset (in ms), changes every run of 16 trials ('0' indicates no 
 # warning signal).
 signal_target_soas = [0, 50, 200, 800]
+
+# whether to use endogenous or exogenous auditory signals
+signal_type = "exo"

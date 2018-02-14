@@ -39,6 +39,9 @@ CREATE TABLE participants (
 	sex text not null,
 	age integer not null, 
 	handedness text not null,
+	athletics text not null,
+	caffeine_drinker text not null,
+	caffeine_today text not null,
 	created text not null,
 	klibs_commit text not null
 

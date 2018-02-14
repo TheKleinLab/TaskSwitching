@@ -15,7 +15,6 @@ from klibs.KLKeyMap import KeyMap
 from klibs.KLTime import CountDown
 from klibs.KLEventInterface import TrialEventTicket as ET
 
-
 # Import other required packages
 
 import sdl2
@@ -63,7 +62,7 @@ class TaskSwitching(klibs.Experiment):
         # Stimulus Drawbjects
         
         self.middle_circle = kld.Annulus(shape_width, circle_stroke, fill=WHITE).render()
-        self.error_circle  = kld.Annulus(shape_width, circle_stroke, fill=RED).render()
+        self.middle_x      = kld.FixationCross(shape_width, square_stroke, fill=WHITE, rotation=45).render()
         
         self.cue_prerender = kld.Rectangle(cue_width, height=cue_height) # stroke is set during prep
         
@@ -94,7 +93,7 @@ class TaskSwitching(klibs.Experiment):
         
         # Reset SOA list for each block of trials and clear the screen
         
-        self.soa_list = [0, 50, 200, 800] # interval between warning signal and target onset in msec
+        self.soa_list = [0, 100, 250, 850] # interval between warning signal and target onset in msec
         clear()
         
         # If first block, display start message and wait for keypress before beginning experiment
@@ -102,6 +101,13 @@ class TaskSwitching(klibs.Experiment):
         if P.block_number == 1:
             fill()
             message("When ready, press any key to begin the experiment.", location=P.screen_c, registration=5)
+            flip()
+            any_key()
+        elif P.block_number == _np.ceil(P.blocks_per_experiment/2.0):
+            halfway_msg = ("Whew! You're halfway done.\n"
+                "Take a break if you need, and press any key to continue.")
+            fill()
+            message(halfway_msg, location=P.screen_c, registration=5, align='center')
             flip()
             any_key()
         
@@ -146,18 +152,24 @@ class TaskSwitching(klibs.Experiment):
         
         # Add timecourse of events to EventManager
         
-        signal_duration = 50 if self.soa != 0 else 0 # no signal on 0 soa trials
+        signal_duration = 100 if self.soa != 0 else 0 # no signal on 0 soa trials
         events = [[self.target_onset - self.soa, 'signal_on']]
         events.append([events[-1][0] + signal_duration, 'signal_off'])
         events.append([self.target_onset, 'target_on'])
         for e in events:
             self.evm.register_ticket(ET(e[1], e[0]))
             
-        # Generate noise for trial and set volume to 50%
+        # Generate background and signal noises for trial
         
-        self.background_noise = self.generate_noise(12, dichotic=False)
+        self.background_noise = self.generate_noise(12, dichotic=False, volume=64)
+        if P.signal_type == "exo":
+            self.signal_noise = self.generate_noise(1, dichotic=False, volume=128)
+        else:
+            self.signal_noise = self.generate_noise(1, dichotic=True, volume=64)
+            
+        # Start playing background noise
+        
         Mix_PlayChannel(1, self.background_noise, -1)
-        Mix_VolumeChunk(self.background_noise, 64)
         
 
     def trial(self):
@@ -174,14 +186,14 @@ class TaskSwitching(klibs.Experiment):
             
             ui_request()
             if self.evm.between('signal_on', 'signal_off') and not signal_on:
-                Mix_VolumeChunk(self.background_noise, 128) # double volume of noise
+                Mix_PlayChannel(1, self.signal_noise, -1) # switch to playing signal
                 signal_on = True
             elif self.evm.after('signal_off') and signal_on:
-                Mix_VolumeChunk(self.background_noise, 64) # return volume to 50% after 50ms
+                Mix_PlayChannel(1, self.background_noise, -1) # turn signal off
                 signal_on = False
         
-        Mix_VolumeChunk(self.background_noise, 64) # make sure volume's back down, just in case
-        
+        Mix_PlayChannel(1, self.background_noise, -1) # make sure signal's off, just in case
+
         # Display target and wait for keyboard response (or 1000ms timeout interval)
         
         self.display_refresh(target=self.target_loc)
@@ -204,10 +216,10 @@ class TaskSwitching(klibs.Experiment):
         # Display feedback for 1000ms following response. If response was accurate, display RT 
         # in place of fixation. If inaccurate, display red fixation to indicate error.
         
-        if self.accuracy != "NA":
-            feedback_period = CountDown(1)
-            while feedback_period.counting():
-                self.display_refresh(target=None, feedback=True)
+        feedback_period = CountDown(1)
+        self.display_refresh(target=None, feedback=True)
+        while feedback_period.counting():
+            ui_request()
             
         if P.development_mode:
             print(response, self.accuracy, self.rt)
@@ -236,7 +248,6 @@ class TaskSwitching(klibs.Experiment):
         # Draw screen elements that are always present during a trial
         
         fill(BLACK)
-        #blit(self.middle_circle, 5, P.screen_c)
         blit(self.empty_marker,  5, self.flanker_pos_l)
         blit(self.empty_marker,  5, self.flanker_pos_r)
         
@@ -249,7 +260,10 @@ class TaskSwitching(klibs.Experiment):
             if self.accuracy == 1: # If correct response, display RT in place of fixation
                 message("{0}".format(int(self.rt)), location=P.screen_c, registration=5)
             elif self.accuracy == 0: # If incorrect response, display fixation as red
-                blit(self.error_circle, 5, P.screen_c)
+                blit(self.middle_x, 5, P.screen_c)
+            elif self.accuracy == "NA": # If no response, display timeout feedback
+                message("Too slow!", location=P.screen_c, registration=5)
+                
         else:
             blit(self.middle_circle, 5, P.screen_c)
         
@@ -274,7 +288,7 @@ class TaskSwitching(klibs.Experiment):
         return random.choice(range(min_flips, max_flips, 1)) * time_per_flip
         
         
-    def generate_noise(self, duration, sample_rate=22050, multiplier=1, dichotic=False):
+    def generate_noise(self, duration, sample_rate=22050, multiplier=1, dichotic=False, volume=64):
         # Code borrowed from Mike Lawrence, I don't fully understand how it works yet.
         max_int = 2**16/4 # 16384, what is this?
         dtype = _np.int16
@@ -294,5 +308,6 @@ class TaskSwitching(klibs.Experiment):
         buflen = len(wav_string)
         buf = (ctypes.c_ubyte * buflen).from_buffer_copy(wav_string)
         noise_SDLsample = Mix_QuickLoad_RAW(ctypes.cast(buf, ctypes.POINTER(ctypes.c_ubyte)), ctypes.c_uint(buflen))
-    
+        Mix_VolumeChunk(noise_SDLsample, volume)
+        
         return noise_SDLsample
