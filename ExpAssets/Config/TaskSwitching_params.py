@@ -1,5 +1,7 @@
 ### Klibs Parameter overrides ###
 
+from klibs import P
+
 #########################################
 # Runtime Settings
 #########################################
@@ -34,6 +36,7 @@ saccadic_motion_threshold = 0.15
 multi_session_project = False
 trials_per_block = 64
 blocks_per_experiment = 2
+conditions = ['endo', 'exo']
 table_defaults = {}
 
 #########################################
@@ -49,19 +52,28 @@ dm_show_gaze_dot = True
 #########################################
 primary_table = "trials"
 unique_identifier = "userhash"
-default_participant_fields = [[unique_identifier, "participant"], "sex", "age", "handedness"]
-default_participant_fields_sf = [[unique_identifier, "participant"], "random_seed", "sex", "age", "handedness"]
+default_participant_fields = [
+    [unique_identifier, "participant"],
+    "sex", "age", "handedness",
+    "athletics", "caffeine_drinker", "caffeine_today"
+]
+default_participant_fields_sf = [
+    [unique_identifier, "participant"], 
+    "random_seed", "sex", "age", "handedness"
+    "athletics", "caffeine_drinker", "caffeine_today"
+]
 
 #########################################
 # PROJECT-SPECIFIC VARS
 #########################################
 
-# upper and lower bounds for interval between trial start and target onset (in ms), chosen randomly each trial.
+# upper and lower bounds for interval between trial start and target onset (in ms),
+# chosen randomly each trial.
 target_onset_range = [2000, 6000]
 
-# interval between warning signal and target onset (in ms), changes every run of 16 trials ('0' indicates no 
-# warning signal).
+# interval between warning signal and target onset (in ms), changes every run of 16 trials
+# ('0' indicates no warning signal).
 signal_target_soas = [0, 50, 200, 800]
 
 # whether to use endogenous or exogenous auditory signals
-signal_type = "exo"
+signal_type = P.condition
