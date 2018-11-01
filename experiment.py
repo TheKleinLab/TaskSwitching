@@ -4,7 +4,7 @@ __author__ = "Austin Hurst"
 # Import required KLibs classes and functions
 
 import klibs
-from klibs.KLConstants import *
+from klibs.KLConstants import STROKE_INNER, RC_KEYPRESS, TK_MS
 from klibs import P
 from klibs import KLUtilities as util
 from klibs.KLUserInterface import any_key, ui_request
@@ -23,6 +23,7 @@ import random
 import numpy as _np
 import ctypes
 import time
+from copy import copy
 
 # Define colours to be used
 
@@ -33,9 +34,6 @@ RED   = [255,0,0]
 
 
 class TaskSwitching(klibs.Experiment):
-
-    def __init__(self, *args, **kwargs):
-        super(TaskSwitching, self).__init__(*args, **kwargs)
 
     def setup(self):
         
@@ -62,7 +60,7 @@ class TaskSwitching(klibs.Experiment):
         # Stimulus Drawbjects
         
         self.middle_circle = kld.Annulus(shape_width, circle_stroke, fill=WHITE).render()
-        self.middle_x      = kld.FixationCross(shape_width, square_stroke, fill=WHITE, rotation=45).render()
+        self.middle_x = kld.FixationCross(shape_width, square_stroke, fill=WHITE, rotation=45).render()
         
         self.cue_prerender = kld.Rectangle(cue_width, height=cue_height) # stroke is set during prep
         
@@ -93,7 +91,7 @@ class TaskSwitching(klibs.Experiment):
         
         # Reset SOA list for each block of trials and clear the screen
         
-        self.soa_list = [0, 100, 250, 850] # interval between warning signal and target onset in msec
+        self.soa_list = copy(P.signal_target_soas) # interval between warning signal and target onset in msec
         clear()
         
         # If first block, display start message and wait for keypress before beginning experiment
@@ -122,6 +120,7 @@ class TaskSwitching(klibs.Experiment):
         self.rc.keypress_listener.key_map = self.keymap
         self.rc.keypress_listener.interrupts = True
 
+
     def trial_prep(self):
         
         # Define variables for trial
@@ -139,9 +138,9 @@ class TaskSwitching(klibs.Experiment):
         # Set stroke of cue to green or red, alternating every 8 trials
         
         if self.green_first:
-            self.cuetype = "compatible" if ((P.trial_number-1)/8) % 2 == 0 else "incompatible"
+            self.cuetype = "compatible" if int((P.trial_number-1)/8) % 2 == 0 else "incompatible"
         else:
-            self.cuetype = "compatible" if ((P.trial_number-1)/8) % 2 == 1 else "incompatible"
+            self.cuetype = "compatible" if int((P.trial_number-1)/8) % 2 == 1 else "incompatible"
         
         if self.cuetype == "incompatible":
             self.cue_prerender.stroke = self.incompatible # Red cue
@@ -152,7 +151,7 @@ class TaskSwitching(klibs.Experiment):
         
         # Add timecourse of events to EventManager
         
-        signal_duration = 100 if self.soa != 0 else 0 # no signal on 0 soa trials
+        signal_duration = 50 if self.soa != 0 else 0 # no signal on 0 soa trials
         events = [[self.target_onset - self.soa, 'signal_on']]
         events.append([events[-1][0] + signal_duration, 'signal_off'])
         events.append([self.target_onset, 'target_on'])
@@ -223,7 +222,7 @@ class TaskSwitching(klibs.Experiment):
             
         if P.development_mode:
             print(response, self.accuracy, self.rt)
-            print ""
+            print("")
 
         return {
             "block_num":  P.block_number,
@@ -236,8 +235,10 @@ class TaskSwitching(klibs.Experiment):
             "rt":         self.rt
         }
 
+
     def trial_clean_up(self):
         pass
+
 
     def clean_up(self):
         pass
@@ -274,6 +275,8 @@ class TaskSwitching(klibs.Experiment):
             
         flip()
 
+
+    ## Utility Functions ##
         
     def random_interval(self, lower, upper, refresh=60): 
         

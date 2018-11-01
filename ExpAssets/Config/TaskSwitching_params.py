@@ -17,7 +17,7 @@ view_distance = 57 # in centimeters, 1cm = 1 deg of visual angle at 57cm away
 #########################################
 default_fill_color = (0, 0, 0, 255)
 default_color = (255, 255, 255, 255)
-default_font_size = 28
+default_font_size = '0.5deg'
 default_font_name = 'Frutiger'
 
 #########################################
@@ -52,16 +52,8 @@ dm_show_gaze_dot = True
 #########################################
 primary_table = "trials"
 unique_identifier = "userhash"
-default_participant_fields = [
-    [unique_identifier, "participant"],
-    "sex", "age", "handedness",
-    "athletics", "caffeine_drinker", "caffeine_today"
-]
-default_participant_fields_sf = [
-    [unique_identifier, "participant"], 
-    "random_seed", "sex", "age", "handedness"
-    "athletics", "caffeine_drinker", "caffeine_today"
-]
+exclude_data_cols = ["created"]
+append_info_cols = ["random_seed"]
 
 #########################################
 # PROJECT-SPECIFIC VARS
@@ -76,4 +68,4 @@ target_onset_range = [2000, 6000]
 signal_target_soas = [0, 50, 200, 800]
 
 # whether to use endogenous or exogenous auditory signals
-signal_type = P.condition
+signal_type = P.condition if P.condition else 'exo'
