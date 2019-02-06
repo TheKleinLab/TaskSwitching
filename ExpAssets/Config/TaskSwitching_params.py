@@ -65,7 +65,7 @@ target_onset_range = [2000, 6000]
 
 # interval between warning signal and target onset (in ms), changes every run of 16 trials
 # ('0' indicates no warning signal).
-signal_target_soas = [0, 50, 200, 800]
+signal_target_soas = [0, 100, 250, 850]
 
 # whether to use endogenous or exogenous auditory signals
 signal_type = P.condition if P.condition else 'exo'

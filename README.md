@@ -4,7 +4,7 @@ TaskSwitching is an experiment program designed as a follow-up to the task used 
 
 ![TaskSwitching_animation](TaskSwitching.gif)
 
-In this experiment, randomly-generated white noise is played constantly through the left and right audio channels. After a random delay between 2000 and 6000 ms, a target appears in either the left or right box. This target is preceeded by an auditory alerting signal (endogenous or exogenous, depending on the condition) on 75% of trials. The interval between the signal and the target can be 800ms, 200ms, 50ms, or 0ms (no alerting signal), changing to a new interval every 16 trials, and varying randomly in order within a block.
+In this experiment, randomly-generated white noise is played constantly through the left and right audio channels. After a random delay between 2000 and 6000 ms, a target appears in either the left or right box. This target is preceeded by a 100ms auditory alerting signal (endogenous or exogenous, depending on the condition) on 75% of trials. The interval between the onsets of the signal and the target can be 850ms, 250ms, 100ms (target appears immediately after signal ends), or 0ms (no alerting signal), changing to a new interval every 16 trials, and varying randomly in order within a block.
 
 Every 8 trials, the border around the stimuli changes colours to indicate the required response to targets, with a green border informing participants to press the response key on the same side as the target (a congruent response) and a red border informing them to press the response key on the opposite side of the target (an incongruent response). Response feedback is presented on every trial for 1000ms before the next trial begins.
 

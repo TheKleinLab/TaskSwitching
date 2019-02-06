@@ -151,7 +151,7 @@ class TaskSwitching(klibs.Experiment):
         
         # Add timecourse of events to EventManager
         
-        signal_duration = 50 if self.soa != 0 else 0 # no signal on 0 soa trials
+        signal_duration = 100 if self.soa != 0 else 0 # no signal on 0 soa trials
         events = [[self.target_onset - self.soa, 'signal_on']]
         events.append([events[-1][0] + signal_duration, 'signal_off'])
         events.append([self.target_onset, 'target_on'])
