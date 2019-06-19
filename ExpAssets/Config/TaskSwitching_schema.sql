@@ -59,6 +59,7 @@ CREATE TABLE trials (
 	participant_id integer key not null,
 	block_num integer not null,
 	trial_num integer not null,
+	signal_type text not null,
 	cue_type text not null,
 	soa text not null,
 	target_loc text not null,

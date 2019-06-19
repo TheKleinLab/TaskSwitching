@@ -225,14 +225,15 @@ class TaskSwitching(klibs.Experiment):
             print("")
 
         return {
-            "block_num":  P.block_number,
-            "trial_num":  P.trial_number,
-            "cue_type":   self.cuetype,
-            "soa":        self.soa if self.soa != 0 else "None",
-            "target_loc": self.target_loc,
-            "response":   response,
-            "accuracy":   self.accuracy,
-            "rt":         self.rt
+            "block_num":   P.block_number,
+            "trial_num":   P.trial_number,
+            "signal_type": P.signal_type,
+            "cue_type":    self.cuetype,
+            "soa":         self.soa if self.soa != 0 else "None",
+            "target_loc":  self.target_loc,
+            "response":    response,
+            "accuracy":    self.accuracy,
+            "rt":          self.rt
         }
 
 
