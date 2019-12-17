@@ -1,7 +1,7 @@
 # TaskSwitching
 
 [![DOI badge](https://img.shields.io/badge/DOI-10.1098/rsos.190134-green.svg)](https://doi.org/10.1098/rsos.190134)
-[![OSF Badge](https://img.shields.io/badge/OSF-Materials Available-blue.svg)](https://osf.io/ry9vm/) 
+[![OSF Badge](https://img.shields.io/badge/OSF-Materials_Available-blue.svg)](https://osf.io/ry9vm/) 
 
 TaskSwitching is an experiment program designed as a follow-up to the task used in [Posner, Klein, Summers, and Buggie (1973)](https://doi.org/10.3758/BF03198062), exploring how exogenous and endogenous alerting affect accuracy and reaction times. All raw data and code necessary to reproduce the analyses for the related manuscript can be found on OSF [here](https://osf.io/ry9vm/).
 
