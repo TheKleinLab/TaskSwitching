@@ -85,6 +85,10 @@ class TaskSwitching(klibs.Experiment):
         # Event Sequence
         
         self.green_first = random.choice([True, False]) # If True, green cue is first.
+
+        # Auditory Stimuli
+
+        self.noise_data = [] # Empty list for making sure noise stimuli aren't garbage collected
         
 
     def block(self):
@@ -160,6 +164,7 @@ class TaskSwitching(klibs.Experiment):
             
         # Generate background and signal noises for trial
         
+        self.noise_data = []
         self.background_noise = self.generate_noise(12, dichotic=False, volume=64)
         if P.signal_type == "exo":
             self.signal_noise = self.generate_noise(1, dichotic=False, volume=128)
@@ -297,21 +302,26 @@ class TaskSwitching(klibs.Experiment):
         max_int = 2**16/4 # 16384, what is this?
         dtype = _np.int16
         size = int(duration*sample_rate)
+        min_val = -max_int*multiplier
+        max_val = max_int*multiplier
     
         if dichotic:
-            noise_L = _np.random.randint(-max_int*multiplier, max_int*multiplier, size, dtype)
-            noise_R = _np.random.randint(-max_int*multiplier, max_int*multiplier, size, dtype)
-            noise_arr = _np.c_[noise_L,noise_R]
+            noise_L = _np.random.randint(min_val, max_val, size, dtype)
+            noise_R = _np.random.randint(min_val, max_val, size, dtype)
+            noise_arr = _np.c_[noise_L, noise_R]
         else:
-            noise   = _np.random.randint(-max_int*multiplier, max_int*multiplier, size).astype('int16')
-            noise_arr = _np.c_[noise,noise]
+            noise = _np.random.randint(min_val, max_val, size, dtype)
+            noise_arr = _np.c_[noise, noise]
 
         # Take randomly generated noise and convert that to an SDL Mix_Chunk
         noise_arr.dtype = dtype
         wav_string = noise_arr.tostring()
         buflen = len(wav_string)
         buf = (ctypes.c_ubyte * buflen).from_buffer_copy(wav_string)
-        noise_SDLsample = Mix_QuickLoad_RAW(ctypes.cast(buf, ctypes.POINTER(ctypes.c_ubyte)), ctypes.c_uint(buflen))
+        self.noise_data.append(buf) # Keep a reference to avoid garbage collection
+        noise_SDLsample = Mix_QuickLoad_RAW(
+            ctypes.cast(buf, ctypes.POINTER(ctypes.c_ubyte)), ctypes.c_uint(buflen)
+        )
         Mix_VolumeChunk(noise_SDLsample, volume)
         
         return noise_SDLsample
